@@ -6,6 +6,7 @@ from math import ceil
 import numpy.random as npr
 from tqdm import tqdm
 import torch
+import spatial_aug, temporal_aug
 
 def make_dataset():
     labels = {}
@@ -28,9 +29,15 @@ def make_dataset():
 class Dataset(object):
     def __init__(self, labels, part):
         self.resizer = iaa.Resize({'width' : 64, 'height' : 64})
+        self.mean =
+        self.std = 
         self.samples = []
         self.targets = []
         self.batch_size = 64
+        self.spatial_aug = spatial_aug.Compose([
+            spatial_aug.MultiScaleRandomCrop(),
+            spatial_aug.SpatialElasticDisplacement()
+        ])
         my_labels = {}
         for label in labels:
             nums = labels[label]
@@ -68,8 +75,11 @@ class Dataset(object):
         batch_target = []
         if i*self.batch_size >= len(self.samples):
             raise IndexError()
+        self.spatial_aug.randomize_parameters()
         for j in range(i*self.batch_size, min((i+1)*self.batch_size, len(self.samples))):
-            sample = self.samples[self.order[j]]
+            sample = self.samples[self.order[j]].copy()
+            imgs = [self.spatial_aug(sample[:, i, :, :].reshape((64, 64, 1))) for i in range(8)]
+            sample = np.stack(imgs, axis=1)
             target = self.targets[self.order[j]]
             batch_samples.append(sample)
             batch_target.append(target)
@@ -77,7 +87,7 @@ class Dataset(object):
         target = np.array(batch_target)
         batch = torch.from_numpy(batch).float()
         target = torch.from_numpy(target).long()
-        return batch/256, target
+        return (batch - self.mean)/self.std, target
 
     def __len__(self):
         return ceil(len(self.samples)/self.batch_size)
