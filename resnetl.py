@@ -6,7 +6,7 @@ import math
 from functools import partial
 
 __all__ = [
-    'ResNet', 'resnet10'
+    'ResNetL', 'resnetl10'
 ]
 
 
@@ -105,7 +105,7 @@ class Bottleneck(nn.Module):
         return out
 
 
-class ResNet(nn.Module):
+class ResNetL(nn.Module):
 
     def __init__(self,
                  block,
@@ -115,9 +115,9 @@ class ResNet(nn.Module):
                  shortcut_type='B',
                  num_classes=400):
         self.inplanes = 16
-        super(ResNet, self).__init__()
+        super(ResNetL, self).__init__()
         self.conv1 = nn.Conv3d(
-            1,
+            3,
             16,
             kernel_size=7,
             stride=(1, 2, 2),
@@ -209,12 +209,10 @@ def get_fine_tuning_parameters(model, ft_begin_index):
             parameters.append({'params': v, 'lr': 0.0})
 
     return parameters
-    
 
 
-
-def resnet10(**kwargs):
-    """Constructs a ResNet-10 model.
+def resnetl10(**kwargs):
+    """Constructs a resnetl-10 model.
     """
-    model = ResNet(BasicBlock, [1, 1, 1, 1], **kwargs)
+    model = ResNetL(BasicBlock, [1, 1, 1, 1], **kwargs)
     return model

@@ -3,12 +3,12 @@ import torch.nn as nn
 from dataset import make_dataset
 from sklearn.metrics import f1_score
 import pickle
-from resnet import resnet10
+from resnetl import resnetl10
 import numpy as np
 from collections import OrderedDict
 from tqdm import tqdm
 
-model = resnet10(sample_size=64, sample_duration=8, num_classes=2, shortcut_type='A')
+model = resnetl10(sample_size=64, sample_duration=8, num_classes=2, shortcut_type='A')
 checkpoint = torch.load('./pretrain/models/egogesture_resnetl_10_Depth_8.pth', map_location=torch.device('cpu'))
 weights = OrderedDict()
 for w_name in checkpoint['state_dict']:
@@ -18,6 +18,7 @@ model.load_state_dict(weights)
 model.cuda()
 train_ds, test_ds = make_dataset()
 loss_fn = nn.CrossEntropyLoss(weight=torch.Tensor([1, 3]).float().cuda())
+act_fn = nn.Softmax(dim=1)
 learning_rate = 0.00001
 epochs = 100
 optim = torch.optim.Adam(model.parameters(), lr=learning_rate)
@@ -31,6 +32,8 @@ with torch.no_grad():
         batch = batch.cuda()
         target = target.cuda()
         pred = model(batch)
+        print(pred.shape)
+        pred = act_fn(pred)
         loss = loss_fn(pred, target)
         avg_train_loss += loss.item()
     avg_train_loss /= len(train_ds)
@@ -44,6 +47,7 @@ with torch.no_grad():
         batch = batch.cuda()
         target = target.cuda()
         pred = model(batch)
+        pred = act_fn(pred)
         loss = loss_fn(pred, target)
         avg_test_loss += loss.item()
         np_pred = pred.cpu().detach().numpy()
@@ -68,6 +72,7 @@ for e in range(epochs):
         batch = batch.cuda()
         target = target.cuda()
         pred = model(batch)
+        pred = act_fn(pred)
         loss = loss_fn(pred, target)
         avg_train_loss += loss.item()
         loss.backward()
@@ -84,6 +89,7 @@ for e in range(epochs):
             eval_batch = eval_batch.cuda()
             eval_target = eval_target.cuda()
             pred = model(eval_batch)
+            pred = act_fn(pred)
             loss = loss_fn(pred, eval_target)
             avg_test_loss += loss.item()
             np_pred = pred.cpu().detach().numpy()
