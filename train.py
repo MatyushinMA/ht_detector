@@ -32,7 +32,6 @@ with torch.no_grad():
         batch = batch.cuda()
         target = target.cuda()
         pred = model(batch)
-        print(pred.shape)
         pred = act_fn(pred)
         loss = loss_fn(pred, target)
         avg_train_loss += loss.item()
