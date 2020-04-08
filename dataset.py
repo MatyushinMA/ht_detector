@@ -78,7 +78,7 @@ class Dataset(object):
         self.spatial_aug.randomize_parameters()
         for j in range(i*self.batch_size, min((i+1)*self.batch_size, len(self.samples))):
             sample = self.samples[self.order[j]].copy()
-            imgs = [self.spatial_aug(sample[:, i, :, :].reshape((64, 64, 1))) for i in range(8)]
+            imgs = [self.spatial_aug(sample[:, i, :, :].reshape((64, 64, 1))).reshape((1, 64, 64)) for i in range(8)]
             sample = np.stack(imgs, axis=1)
             target = self.targets[self.order[j]]
             batch_samples.append(sample)
