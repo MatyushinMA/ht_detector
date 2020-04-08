@@ -358,7 +358,7 @@ class MultiScaleRandomCrop(object):
         y1 = self.tl_y * (image_height - crop_size)
         x2 = x1 + crop_size
         y2 = y1 + crop_size
-
+        x1, y1, x2, y2 = list(map(int, [x1, y1, x2, y2]))
         img = img[y1:y2, x1:x2]
 
         return cv2.resize(img, (self.size, self.size))
