@@ -29,8 +29,8 @@ def make_dataset():
 class Dataset(object):
     def __init__(self, labels, part):
         self.resizer = iaa.Resize({'width' : 64, 'height' : 64})
-        self.mean =
-        self.std = 
+        self.mean = 109.71164610001608
+        self.std = 58.766042004213176
         self.samples = []
         self.targets = []
         self.batch_size = 64
