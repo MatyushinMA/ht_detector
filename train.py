@@ -53,8 +53,8 @@ with torch.no_grad():
         TN += np.sum((pred_logits == 0) & (np_target == 0))
         FP += np.sum((pred_logits == 1) & (np_target == 0))
         FN += np.sum((pred_logits == 0) & (np_target == 1))
-    precision = TP/float(TP + TN)
-    recall = TP/float(TP + FP)
+    precision = TP/float(TP + FP)
+    recall = TP/float(TP + FN)
     f1 = 2*precision*recall/(precision + recall)
     avg_test_loss /= len(test_ds)
     test_losses = [avg_test_loss]
