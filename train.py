@@ -23,7 +23,8 @@ model.cuda()
 train_ds, test_ds = make_dataset()
 loss_fn = nn.CrossEntropyLoss(weight=torch.Tensor([1, 3]).float().cuda())
 act_fn = nn.Softmax(dim=1)
-learning_rate = 0.00001
+learning_rate = 0.001
+clip_value = 0.05
 epochs = 100
 optim = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
@@ -79,6 +80,7 @@ for e in range(epochs):
         loss = loss_fn(pred, target)
         avg_train_loss += loss.item()
         loss.backward()
+        torch.nn.utils.clip_grad_norm_(model.parameters(), clip_value)
         optim.step()
     avg_train_loss /= len(train_ds)
     train_losses.append(avg_train_loss)
