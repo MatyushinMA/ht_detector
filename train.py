@@ -9,12 +9,16 @@ from collections import OrderedDict
 from tqdm import tqdm
 
 model = resnetl10(sample_size=64, sample_duration=8, num_classes=2, shortcut_type='A')
-checkpoint = torch.load('./pretrain/models/egogesture_resnetl_10_Depth_8.pth', map_location=torch.device('cpu'))
-weights = OrderedDict()
-for w_name in checkpoint['state_dict']:
-    _w_name = '.'.join(w_name.split('.')[1:])
-    weights[_w_name] = checkpoint['state_dict'][w_name]
-model.load_state_dict(weights)
+try:
+    checkpoint = torch.load('./best_detector_checkpoint.pth.tar', map_location=torch.device('cpu'))
+    model.load_state_dict(checkpoint)
+except:
+    checkpoint = torch.load('./pretrain/models/egogesture_resnetl_10_Depth_8.pth', map_location=torch.device('cpu'))
+    weights = OrderedDict()
+    for w_name in checkpoint['state_dict']:
+        _w_name = '.'.join(w_name.split('.')[1:])
+        weights[_w_name] = checkpoint['state_dict'][w_name]
+    model.load_state_dict(weights)
 model.cuda()
 train_ds, test_ds = make_dataset()
 loss_fn = nn.CrossEntropyLoss(weight=torch.Tensor([1, 3]).float().cuda())
