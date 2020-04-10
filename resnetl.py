@@ -117,7 +117,7 @@ class ResNetL(nn.Module):
         self.inplanes = 16
         super(ResNetL, self).__init__()
         self.conv1 = nn.Conv3d(
-            3,
+            1,
             16,
             kernel_size=7,
             stride=(1, 2, 2),
