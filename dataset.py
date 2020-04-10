@@ -15,8 +15,6 @@ def make_dataset():
             num, label = ln.split('\t')
             num = int(num)
             label = label.strip()
-            if label not in ['No gesture', 'Swiping Left', 'Swiping Right']:
-                continue
             try:
                 labels[label].append(num)
             except:

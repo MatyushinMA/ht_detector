@@ -111,3 +111,7 @@ with open('./test_losses.dat', 'wb') as fw:
     pickle.dump(test_losses, fw)
 with open('./test_f1s.dat', 'wb') as fw:
     pickle.dump(test_f1s, fw)
+    state_dict = model.state_dict()
+    torch.save(state_dict, 'detector_checkpoint.pth.tar')
+    if f1 == max(test_f1s):
+        torch.save(state_dict, 'best_detector_checkpoint.pth.tar')
