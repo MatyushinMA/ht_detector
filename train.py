@@ -111,13 +111,13 @@ for e in range(epochs):
     test_losses.append(avg_test_loss)
     test_f1s.append(f1)
     print('EPOCH: %d, TRAIN LOSS: %f, TEST LOSS: %f, PRECISION: %f, RECALL: %f, F1: %f' % (e + 1, train_losses[-1], test_losses[-1], precision, recall, test_f1s[-1]))
+    state_dict = model.state_dict()
+    torch.save(state_dict, 'detector_checkpoint.pth.tar')
+    if f1 == max(test_f1s):
+        torch.save(state_dict, 'best_detector_checkpoint.pth.tar')
 with open('./train_losses.dat', 'wb') as fw:
     pickle.dump(train_losses, fw)
 with open('./test_losses.dat', 'wb') as fw:
     pickle.dump(test_losses, fw)
 with open('./test_f1s.dat', 'wb') as fw:
     pickle.dump(test_f1s, fw)
-    state_dict = model.state_dict()
-    torch.save(state_dict, 'detector_checkpoint.pth.tar')
-    if f1 == max(test_f1s):
-        torch.save(state_dict, 'best_detector_checkpoint.pth.tar')
