@@ -345,7 +345,7 @@ class MultiScaleCornerCrop(object):
 class MultiScaleRandomCrop(object):
     def __init__(self):
         self.scales = [1.0, 2**-0.25, 2**-0.75, 0.5]
-        self.size = 64
+        self.size = 112
 
     def __call__(self, img):
         min_length = min(img.shape[0], img.shape[1])

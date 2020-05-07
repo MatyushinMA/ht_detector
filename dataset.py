@@ -26,7 +26,7 @@ def make_dataset():
 
 class Dataset(object):
     def __init__(self, labels, part):
-        self.resizer = iaa.Resize({'width' : 64, 'height' : 64})
+        self.resizer = iaa.Resize({'width' : 112, 'height' : 112})
         self.mean = 109.71164610001608
         self.std = 58.766042004213176
         self.samples = []
@@ -48,17 +48,25 @@ class Dataset(object):
             nums = my_labels[label]
             print('Loading %d paths for label %s' % (len(nums), label))
             for _, num in tqdm(enumerate(nums)):
+                if _ > 10:
+                    break
                 fls = sorted(os.listdir('./data/%d/' % num))
                 if len(fls) < 8:
                     continue
                 imgs = []
                 for f_name in fls:
                     img = cv2.imread('./data/%d/%s' % (num, f_name))
-                    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-                    sample_img = img.reshape((1, img.shape[0], img.shape[1], 1))
-                    sample_img = self.resizer(images=sample_img)[0, :, :, :].reshape(1, 64, 64)
+                    h, w = img.shape[:2]
+                    if h > w:
+                        offset = (h - w)//2
+                        img = img[offset:-offset, :, :]
+                    elif w > h:
+                        offset = (w - h)//2
+                        img = img[:, offset:-offset, :]
+                    sample_img = img.reshape((1, img.shape[0], img.shape[1], 3))
+                    sample_img = self.resizer(images=sample_img)[0, :, :, :].reshape(3, 112, 112)
                     imgs.append(sample_img)
-                for ptr in range(8, len(imgs) + 1):
+                for ptr in range(8, len(imgs) + 1, 8):
                     imgs_slice = imgs[ptr - 8:ptr]
                     sample = np.stack(imgs_slice, axis=1)
                     self.samples.append(sample)
@@ -76,7 +84,7 @@ class Dataset(object):
         self.spatial_aug.randomize_parameters()
         for j in range(i*self.batch_size, min((i+1)*self.batch_size, len(self.samples))):
             sample = self.samples[self.order[j]].copy()
-            imgs = [self.spatial_aug(sample[:, i, :, :].reshape((64, 64, 1))).reshape((1, 64, 64)) for i in range(8)]
+            imgs = [self.spatial_aug(sample[:, i, :, :].reshape((112, 112, 3))).reshape((3, 112, 112)) for i in range(8)]
             sample = np.stack(imgs, axis=1)
             target = self.targets[self.order[j]]
             batch_samples.append(sample)
