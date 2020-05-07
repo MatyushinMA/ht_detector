@@ -7,6 +7,7 @@ import numpy.random as npr
 from tqdm import tqdm
 import torch
 import spatial_aug, temporal_aug
+import random
 
 def make_dataset():
     labels = {}
@@ -53,28 +54,42 @@ class Dataset(object):
                 fls = sorted(os.listdir('./data/%d/' % num))
                 if len(fls) < 8:
                     continue
-                imgs = []
-                for f_name in fls:
-                    img = cv2.imread('./data/%d/%s' % (num, f_name))
-                    h, w = img.shape[:2]
-                    if h > w:
-                        offset = (h - w)//2
-                        img = img[offset:-offset, :, :]
-                    elif w > h:
-                        offset = (w - h)//2
-                        img = img[:, offset:-offset, :]
-                    sample_img = img.reshape((1, img.shape[0], img.shape[1], 3))
-                    sample_img = self.resizer(images=sample_img)[0, :, :, :].reshape(3, 112, 112)
-                    imgs.append(sample_img)
-                for ptr in range(8, len(imgs) + 1, 8):
-                    imgs_slice = imgs[ptr - 8:ptr]
-                    sample = np.stack(imgs_slice, axis=1)
-                    self.samples.append(sample)
-                    if label == 'No gesture':
-                        self.targets.append(0)
-                    else:
-                        self.targets.append(1)
+                self.samples.append(list(map(lambda x : './data/%d/%s' % (num, x), fls)))
+                if label == 'No gesture':
+                    self.targets.append(0)
+                else:
+                    self.targets.append(1)
+
         self.order = np.arange(len(self.samples))
+
+    def __generate_slice(self, sample_id):
+        imgs = []
+        fls = self.samples[sample_id]
+        for f_name in fls:
+            img = cv2.imread(f_name)
+            h, w = img.shape[:2]
+            if h > w:
+                offset = (h - w)//2
+                img = img[offset:-offset, :, :]
+            elif w > h:
+                offset = (w - h)//2
+                img = img[:, offset:-offset, :]
+            sample_img = img.reshape((1, img.shape[0], img.shape[1], 3))
+            sample_img = self.resizer(images=sample_img)[0, :, :, :].reshape(3, 112, 112)
+            imgs.append(sample_img)
+        if not self.targets[sample_id]:
+            start_pos = random.randint(0, len(imgs) - 8)
+            imgs_slice = imgs[start_pos:start_pos + 8]
+        else:
+            if len(imgs) >= 18:
+                offset = ceil(len(imgs)*0.2)
+                start_pos = random.randint(offset, len(imgs) - offset - 8)
+                imgs_slice = imgs[start_pos:start_pos + 8]
+            else:
+                start_pos = random.randint(0, len(imgs) - 8)
+                imgs_slice = imgs[start_pos:start_pos + 8]
+        sample = np.stack(imgs_slice, axis=1)
+        return sample
 
     def __getitem__(self, i):
         batch_samples = []
@@ -83,7 +98,7 @@ class Dataset(object):
             raise IndexError()
         self.spatial_aug.randomize_parameters()
         for j in range(i*self.batch_size, min((i+1)*self.batch_size, len(self.samples))):
-            sample = self.samples[self.order[j]].copy()
+            sample = self.__generate_slice(self.order[j]])
             imgs = [self.spatial_aug(sample[:, i, :, :].reshape((112, 112, 3))).reshape((3, 112, 112)) for i in range(8)]
             sample = np.stack(imgs, axis=1)
             target = self.targets[self.order[j]]
