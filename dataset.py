@@ -28,8 +28,8 @@ def make_dataset():
 class Dataset(object):
     def __init__(self, labels, part):
         self.resizer = iaa.Resize({'width' : 112, 'height' : 112})
-        self.mean = 109.71164610001608
-        self.std = 58.766042004213176
+        self.mean = torch.from_numpy(np.load('./mean.pkl')).float().view((3,))
+        self.std = torch.from_numpy(np.load('./std.pkl')).float().view((3,))
         self.samples = []
         self.targets = []
         self.batch_size = 64
@@ -96,9 +96,9 @@ class Dataset(object):
         batch_target = []
         if i*self.batch_size >= len(self.samples):
             raise IndexError()
-        self.spatial_aug.randomize_parameters()
         for j in range(i*self.batch_size, min((i+1)*self.batch_size, len(self.samples))):
-            sample = self.__generate_slice(self.order[j]])
+            sample = self.__generate_slice(self.order[j])
+            self.spatial_aug.randomize_parameters()
             imgs = [self.spatial_aug(sample[:, i, :, :].reshape((112, 112, 3))).reshape((3, 112, 112)) for i in range(8)]
             sample = np.stack(imgs, axis=1)
             target = self.targets[self.order[j]]
